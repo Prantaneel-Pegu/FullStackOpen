@@ -60,8 +60,4 @@ const Button = ({handleClick, text}) => {
   )
 }
 
-
-
-
-
 export default App
