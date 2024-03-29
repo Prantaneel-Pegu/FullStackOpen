@@ -1,4 +1,6 @@
+
 const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNewNumber}) => {
+
     return (
       <>
         <form onSubmit={(e) => {
