@@ -1,3 +1,4 @@
+import serverDB from '../services/communication'
 
 const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNewNumber}) => {
 
@@ -9,9 +10,12 @@ const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNew
           if (!(addedContacts.includes(newName.toLowerCase()))) {
             const newContact = {
               name: newName,
-              number: newNumber
+              number: newNumber,
+              id: persons.length + 1
             }
-            setPersons(persons.concat(newContact))
+            console.log(persons.concat(newContact).length, newContact);
+            serverDB.create({...newContact})
+            setPersons(persons.concat(newContact))            
             setNewName('a new contact...')
             setNewNumber(0)
           } else {

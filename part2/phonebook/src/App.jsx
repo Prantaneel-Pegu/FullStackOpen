@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 
+import serverDB from './services/communication'
 import NewContact  from './components/NewContact'
 import SavedNumbers from './components/SavedNumbers'
 import SearchContact from './components/SearchContact'
@@ -14,9 +14,12 @@ const App = () => {
   const [filterName, setFilterName] = useState('')
 
   useEffect(() => { 
-    axios
-    .get('http://localhost:3001/persons')
-    .then(response => setPersons(response.data))
+    serverDB
+      .getPersons()
+      .then(result => 
+        setPersons(result)
+        )
+    console.log(serverDB.getPersons().then(result => console.log(result)))
   }, [])
 
   return (
@@ -26,7 +29,7 @@ const App = () => {
       <h2>Add a new Contact</h2>
       <NewContact persons={persons} newName={newName} newNumber={newNumber}  setPersons={setPersons} setNewName={setNewName} setNewNumber={setNewNumber}/>
       <h2>Numbers</h2>
-      <SavedNumbers people={persons} />
+      <SavedNumbers people={persons} setPersons={setPersons}/>
     </div>
   )
 }
