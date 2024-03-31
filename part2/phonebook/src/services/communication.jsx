@@ -6,12 +6,16 @@ const getPersons = () => {
     return axios.get(personsUrl).then(response => response.data)
 }
   
-const create = (newPerson) => {
-    return axios.post(personsUrl, newPerson)
+const createContact = (newPerson) => {
+    return axios.post(personsUrl, newPerson).then(response => response.data)
 }
   
+const updateContact = (id, newPerson) => {
+    return axios.put(`${personsUrl}/${id}`, newPerson).then(response => response.data)
+}
+
 const deleteContact = (id) => {
-    return axios.delete(`${personsUrl}/${id}`).then(response => response.data)
+    return axios.delete(`${personsUrl}/${id}`)
 }
   
-export default {getPersons, create, deleteContact}
+export default {getPersons, createContact, updateContact, deleteContact}

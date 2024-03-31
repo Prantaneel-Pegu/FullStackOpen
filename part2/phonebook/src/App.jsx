@@ -19,7 +19,6 @@ const App = () => {
       .then(result => 
         setPersons(result)
         )
-    console.log(serverDB.getPersons().then(result => console.log(result)))
   }, [])
 
   return (
