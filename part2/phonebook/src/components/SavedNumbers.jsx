@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import serverDB from '../services/communication'
 
-const SavedNumbers = ({people, setPersons}) => {
+const SavedNumbers = ({people, setPersons, setMessage}) => {
 
     return (
     <>
@@ -12,7 +12,12 @@ const SavedNumbers = ({people, setPersons}) => {
                 if (confirm(`Delete ${contact.name}?`)){
                     let updatedPeople = [...people];
                     updatedPeople.splice(id, 1)
-                    serverDB.deleteContact(contact.id).then(() => {setPersons(updatedPeople)})
+                    serverDB.deleteContact(contact.id).then(() => {
+                        setPersons(updatedPeople)
+                        setMessage(`Deleted ${contact.name}`)
+                    }).catch(() => {
+                        setMessage(`Error: ${contact.name}'s information was not found on server`)
+                      }) 
                 }
             }}>delete</button>
         </div>

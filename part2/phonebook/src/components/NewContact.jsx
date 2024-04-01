@@ -1,6 +1,6 @@
 import serverDB from '../services/communication'
 
-const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNewNumber}) => {
+const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNewNumber, setMessage}) => {
 
     return (
       <>
@@ -23,8 +23,9 @@ const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNew
               .then((response) => {newContact.id = response.id})
               .then(() => {
                 setPersons(persons.concat(newContact)) 
+                setMessage(`Added ${newName}`)
                 setNewName('a new contact...')
-                setNewNumber(0)
+                setNewNumber(0)                
               })                                   
           } else if(addedContacts.includes(newName.toLowerCase()) && !(addedNumbers.includes(newNumber))) {
               if (confirm(`${newName} is already added to phonebook, replace the old name and number with the new ones?`)) {
@@ -39,8 +40,12 @@ const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNew
                     let updatedPersons = [...persons]
                     updatedPersons[addedContacts.indexOf(newName.toLowerCase())] = newContact
                     setPersons(updatedPersons) 
+                    setMessage(`Updated ${newName}`)
                     setNewName('a new contact...')
-                    setNewNumber(0)
+                    setNewNumber(0)                   
+                  })
+                  .catch(() => {
+                    setMessage(`Error: ${newName}'s information was not found on server`)
                   })   
               }
           } else {
