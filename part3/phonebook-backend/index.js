@@ -23,7 +23,10 @@ const errorHandler = (err, req, res, next) => {
   console.log(err.message);
   if (err.name === 'CastError') {
     return res.status(400).send({ Error: 'Malformatted or wrong id' })
-  } 
+  } else if (err.name === 'ValidationError') {
+    return res.status(400).json({ error: err.message })
+  }
+
   next(err)
 }
 
@@ -81,6 +84,8 @@ app.post('/api/persons/', (req, res, next) => {
         persons.push(updatedNewPerson)
         res.json(updatedNewPerson)
       })
+      .catch(err => next(err))
+
     } else {
       res.status(400).end('<p>The received request was malformed. Ensure your request object contains the "name" and "number" properties, and the name is not already present in /api/persons.</p><p style="color: red">Status code: 400</p>')
     }
@@ -96,7 +101,7 @@ app.put('/api/persons/:id', (req, res, next) => {
       const id = req.params.id
       let updatedContactToSend = req.body
 
-      Person.findByIdAndUpdate(id, updatedContactToSend, {new: true})
+      Person.findByIdAndUpdate(id, updatedContactToSend, {new: true, runValidators: true})
         .then(updatedContact => {
           res.json(updatedContact)
         })

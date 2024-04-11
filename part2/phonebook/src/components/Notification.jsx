@@ -37,7 +37,7 @@ const Notification = ({newName, message, setMessage}) => {
             }, 3500)
     }
 
-    if (message === `Error: ${newName}'s information was not found on server`) {
+    if (message != null && (message.includes('Error') || message.includes('failed'))) {
         return (
         <div id="notification-box" style={errorStyle}>
             {message}

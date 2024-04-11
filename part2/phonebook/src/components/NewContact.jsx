@@ -26,7 +26,10 @@ const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNew
                 setMessage(`Added ${newName}`)
                 setNewName('a new contact...')
                 setNewNumber(0)                
-              })                                   
+              })
+              .catch(err => {
+                setMessage(err.response.data.error)  
+              })                                  
           } else if(addedContacts.includes(newName.toLowerCase()) && !(addedNumbers.includes(newNumber))) {
               if (confirm(`${newName} is already added to phonebook, replace the old name and number with the new ones?`)) {
                 const newContact = {
@@ -44,8 +47,12 @@ const NewContact = ({persons, newName, newNumber, setPersons, setNewName, setNew
                     setNewName('a new contact...')
                     setNewNumber(0)                   
                   })
-                  .catch(() => {
-                    setMessage(`Error: ${newName}'s information was not found on server`)
+                  .catch(err => {
+                    if (err.response !== undefined) {
+                      setMessage(err.response.data.error)
+                    } else {
+                      setMessage(`Error: Couldn't find ${newName}'s data on server.`)
+                    }
                   })   
               }
           } else {
