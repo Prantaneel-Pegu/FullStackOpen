@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-var morgan = require('morgan')
+const Person = require('./models/Person')
+const morgan = require('morgan')
 
 const app = express()
 
@@ -13,86 +15,123 @@ morgan.token('POST-data', (req, res) => JSON.stringify(req.body))
 
 const PORT = process.env.PORT || 3001
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    },
-    { 
-      "id": 5,
-      "name": "Mary IS NOT Poppendieck", 
-      "number": "3913123-23-6423122"
-    }
-]
+const getPersons = async () => await Person.find({})
 
 const generateId = () => Math.round(Math.random() * Math.random() * Math.random() * Math.random() * 1000000)
 
-
-app.get('/api/persons', (req, res) => {
-  res.json(persons)
-})
-
-
-app.get('/info', (req, res) => {
-  const date = new Date()
-  res.send(`<p>Phonebook has info for ${persons.length} people</p>
-              <br/>
-              ${date}`)
-})
-
-
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const requestedId = persons.find((contact) => contact.id === id)
-
-  if ( requestedId === undefined) {
-    res.status(404).end('<p>The requested resource was not found on the server.</p><p style="color: red">Status code: 404</p>')
-  } else {
-    res.json(requestedId)
+const errorHandler = (err, req, res, next) => {
+  console.log(err.message);
+  if (err.name === 'CastError') {
+    return res.status(400).send({ Error: 'Malformatted or wrong id' })
   } 
+  next(err)
+}
+
+
+app.get('/api/persons', (req, res, next) => {
+  getPersons()
+    .then(persons => res.json(persons))
+    .catch(err => next(err))
 })
 
 
-app.post('/api/persons/', (req, res) => {
-
-  let newPerson = {...req.body, id: generateId()} 
-  let personNames = persons.map((person) => person.name.toLowerCase())
-
-  if (Object.hasOwn(newPerson, 'name') && Object.hasOwn(newPerson, 'number') && !personNames.includes(newPerson.name.toLowerCase())) {   
-    persons.push(newPerson)
-    res.send('<p style="color: green">The requested resource was added successfully.</p>')
-  } else {
-    res.status(400).end('<p>The received request was malformed. Ensure your request object contains the "name" and "number" properties, and the name is not already present in /api/persons.</p><p style="color: red">Status code: 204</p>')
-  }
+app.get('/info', (req, res, next) => {
+  getPersons()
+    .then(persons => {
+      const date = new Date()
+      res.send(`<p>Phonebook has info for ${persons.length} people</p>
+                  <br/>
+                  ${date}`)
+    .catch(err => next(err))
+  })
 })
 
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = req.params.id
+app.get('/api/persons/:id', (req, res, next) => {
+  getPersons()
+    .then(persons => {
+      const id = req.params.id
+      const requestedId = persons.find((contact) => {console.log(contact.id, id);;return contact.id === id})
+    
+      if ( requestedId === undefined) {
+        res.status(404).end('<p>The requested resource was not found on the server.</p><p style="color: red">Status code: 404</p>')
+      } else {
+        res.json(requestedId)
+      }
+    })
+    .catch(err => next(err))
+  } 
+)
 
-  if (id > persons.length) {
-    res.status(404).end('<p>The requested resource was not found on the server.</p><p style="color: red">Status code: 404</p>')
-  }  
 
-  persons.splice(id - 1, 1)
-  res.send('<p style="color: green">The requested delete operation completed successfully.</p>')
+app.post('/api/persons/', (req, res, next) => {
+  getPersons()
+  .then(persons => {
+
+    let newPerson = {...req.body, id: generateId()} // Generate an id as failsafe, normally mongodb will auto generate for us
+    let personNames = persons.map((person) => person.name.toLowerCase())
+  
+    if (Object.hasOwn(newPerson, 'name') && Object.hasOwn(newPerson, 'number') && !personNames.includes(newPerson.name.toLowerCase())) {   
+      const savePerson = new Person({...newPerson})
+      savePerson.save().then(updatedNewPerson => {
+        updatedNewPerson.id = updatedNewPerson._id.toString()
+        delete updatedNewPerson._id
+        delete updatedNewPerson.__v
+
+        persons.push(updatedNewPerson)
+        res.json(updatedNewPerson)
+      })
+    } else {
+      res.status(400).end('<p>The received request was malformed. Ensure your request object contains the "name" and "number" properties, and the name is not already present in /api/persons.</p><p style="color: red">Status code: 400</p>')
+    }
+
+  })
+  .catch(err => next(err))
 })
+
+
+app.put('/api/persons/:id', (req, res, next) => {
+  getPersons()
+    .then(persons => {
+      const id = req.params.id
+      let updatedContactToSend = req.body
+
+      Person.findByIdAndUpdate(id, updatedContactToSend, {new: true})
+        .then(updatedContact => {
+          res.json(updatedContact)
+        })
+        .catch(err => next(err))
+    })
+    .catch(err => next(err))
+})
+
+
+app.delete('/api/persons/:id', (req, res, next) => {
+  getPersons()
+  .then(persons => {
+    const id = req.params.id
+
+    let personIds = persons.map((person) => person.id)
+    if (!personIds.includes(id)) {
+      res.status(404).end('<p>The requested resource was not found on the server.</p><p style="color: red">Status code: 404</p>')
+    }
+  
+    let personToDelete = personIds.indexOf(id)
+  
+    if (personToDelete !== -1) {
+      Person.findByIdAndDelete(id).then(result => {
+        persons.splice(personToDelete, 1)
+        res.send('<p style="color: green">The requested delete operation completed successfully.</p>')
+      })
+    } else {
+      res.status(404).end('<p>The requested resource was not found on the server.</p><p style="color: red">Status code: 404</p>')
+    }
+  })
+  .catch(err => next(err))
+})
+
+
+app.use(errorHandler)
 
 
 app.listen(PORT, () => {

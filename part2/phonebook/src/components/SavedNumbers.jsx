@@ -14,7 +14,7 @@ const SavedNumbers = ({people, setPersons, setMessage}) => {
                     updatedPeople.splice(id, 1)
                     serverDB.deleteContact(contact.id).then(() => {
                         setPersons(updatedPeople)
-                        setMessage(`Deleted ${contact.name}`)
+                        setMessage(`Deleted '${contact.name}'`)
                     }).catch(() => {
                         setMessage(`Error: ${contact.name}'s information was not found on server`)
                       }) 
