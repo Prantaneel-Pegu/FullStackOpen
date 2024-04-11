@@ -21,7 +21,8 @@ const personSchema = new mongoose.Schema({
       validator: person => {
         return /\d\d-\d\d\d\d\d\d+/.test(person) || /\d\d\d-\d\d\d\d\d+/.test(person)
       }
-  }}
+    }
+  }
 })
 
 personSchema.set('toJSON', {
